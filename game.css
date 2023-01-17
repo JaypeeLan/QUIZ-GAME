@@ -64,12 +64,19 @@
 
 /* LOADER */
 #loader {
+  position: absolute;
+  z-index: 99;
   border: 1.6rem solid white;
   border-radius: 50%;
   border-top: 1.6rem solid #56a5eb;
   width: 12rem;
   height: 12rem;
   animation: spin 2s linear infinite;
+  -webkit-animation: spin 2s linear infinite;
+  -webkit-border-radius: 50%;
+  -moz-border-radius: 50%;
+  -ms-border-radius: 50%;
+  -o-border-radius: 50%;
 }
 
 @keyframes spin {

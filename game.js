@@ -3,117 +3,135 @@ const choices = Array.from(document.getElementsByClassName("choice-text"));
 const progressText = document.getElementById("progressText");
 const scoreText = document.getElementById("score");
 const progressBarFull = document.getElementById("progressBarFull");
+const loader = document.getElementById("loader");
+const game = document.getElementById("game");
 
 let currentQuestion = {};
 let acceptingAnswers = false;
 let score = 0;
 let questionCounter = 0;
 let availableQuestions = [];
-let questions = [{
-        question: " Inside which HTML element do we put the JavaScript??",
-        choice1: `< script >`,
-        choice2: `< javascript>`,
-        choice3: `< js>`,
-        choice4: `< scripting>`,
-        answer: 1,
-    },
-    {
-        question: " What is the correct syntax for referring to an external script called 'xxx.js'?",
-        choice1: `< script href = 'xxx.js' >`,
-        choice2: `< script name = 'xxx.js' >`,
-        choice3: `< script src = 'xxx.js' > `,
-        choice4: `< script file = 'xxx.js' >`,
-        answer: 3,
-    },
-    {
-        question: " How do you write 'Hello World' in an alert box?",
-        choice1: "msgBox('Hello World');",
-        choice2: "alertBox('Hello World');",
-        choice3: "msg('Hello World');",
-        choice4: "alert('Hello World');",
-        answer: 4,
-    },
-];
+
+let questions = [];
+
+fetch(
+  "https://opentdb.com/api.php?amount=10&category=9&difficulty=medium&type=multiple"
+)
+  .then((res) => {
+    return res.json();
+  })
+  .then((data) => {
+    questions = data.results.map((question) => {
+      // console.log(question);
+
+      // we get question, correct answer and 3 incorrect answers
+
+      const formattedQuestions = {
+        question: question.question,
+      };
+
+      // -----------------------------------------
+      // create new array of incorrect answers
+      const answerChoices = [...question.incorrect_answers];
+      // -----------------------------------------------
+      // generate a random index/position for the correct answer
+      formattedQuestions.answer = Math.floor(Math.random() * 3 + 1);
+
+      // add the correct answer into the array of prev created incorrect answers
+      answerChoices.splice(
+        formattedQuestions.answer - 1,
+        0,
+        question.correct_answer
+      );
+      // -------------------------
+      answerChoices.forEach((choice, index) => {
+        // choice1, choice2, choice3, choice4 (see line 95)
+        formattedQuestions["choice" + (index + 1)] = choice;
+      });
+
+      return formattedQuestions;
+    });
+
+    startGame();
+  });
 
 // CONSTANTS
 const CORRECT_BONUS = 10;
-const MAX_QUESTIONS = 3;
+const MAX_QUESTIONS = 10;
 
 startGame = () => {
-    questionCounter = 0;
-    score = 0;
-    // to avoid mutating the questions array
-    availableQuestions = [...questions];
+  questionCounter = 0;
+  score = 0;
+  // to avoid mutating the questions array
+  availableQuestions = [...questions];
 
-    getNewQuestion();
+  getNewQuestion();
+
+  game.classList.remove("hidden");
+  loader.classList.add("hidden");
 };
 
 getNewQuestion = () => {
-    // redirect to end page
-    if (availableQuestions.length == 0 || questionCounter > MAX_QUESTIONS) {
-        return window.location.assign("./end.html");
-    }
+  // redirect to end page
+  if (availableQuestions.length == 0 || questionCounter > MAX_QUESTIONS) {
+    return window.location.assign("./end.html");
+  }
 
-    // --------
-    localStorage.setItem('latestScore', score)
+  // --------
+  localStorage.setItem("latestScore", score);
 
-    // -------------------------
-    questionCounter++;
+  // -------------------------
+  questionCounter++;
 
-    // update the remaining questions left against the total
-    progressText.innerText = `Question ${questionCounter}/${MAX_QUESTIONS}`;
+  // update the remaining questions left against the total
+  progressText.innerText = `Question ${questionCounter}/${MAX_QUESTIONS}`;
 
-    // update the progress bar
-    progressBarFull.style.width = `${(questionCounter / MAX_QUESTIONS) * 100}%`;
+  // update the progress bar
+  progressBarFull.style.width = `${(questionCounter / MAX_QUESTIONS) * 100}%`;
 
-    // pick a random question within the array
-    const questionIndex = Math.floor(Math.random() * availableQuestions.length);
+  // pick a random question within the array
+  const questionIndex = Math.floor(Math.random() * availableQuestions.length);
 
-    currentQuestion = availableQuestions[questionIndex];
+  currentQuestion = availableQuestions[questionIndex];
 
-    // inner text in the DOM is updated with the question
-    question.innerText = currentQuestion.question;
+  // inner text in the DOM is updated with the question
+  question.innerText = currentQuestion.question;
 
-    choices.forEach((choice) => {
-        const number = choice.dataset["number"];
-        console.log(number);
-        choice.innerHTML = currentQuestion["choice" + number];
-    });
+  choices.forEach((choice) => {
+    const number = choice.dataset["number"];
+    choice.innerHTML = currentQuestion["choice" + number];
+  });
 
-    // remove question after answering it
-    availableQuestions.splice(questionIndex, 1);
+  // remove question after answering it
+  availableQuestions.splice(questionIndex, 1);
 
-    acceptingAnswers = true;
+  acceptingAnswers = true;
 };
 
 choices.forEach((choice) => {
-    choice.addEventListener("click", (e) => {
-        if (!acceptingAnswers) return;
-        acceptingAnswers = false;
+  choice.addEventListener("click", (e) => {
+    if (!acceptingAnswers) return;
+    acceptingAnswers = false;
 
-        const selectedChoice = e.target;
-        const selectedAnswer = selectedChoice.dataset["number"];
+    const selectedChoice = e.target;
+    const selectedAnswer = selectedChoice.dataset["number"];
 
-        // console.log(selectedAnswer == currentQuestion.answer)
+    // apply a green background to the option if the answer is correct
+    const classToApply =
+      selectedAnswer == currentQuestion.answer ? "correct" : "incorrect";
 
-        // apply a green background to the option if the answer is correct
-        const classToApply =
-            selectedAnswer == currentQuestion.answer ? "correct" : "incorrect";
+    classToApply === "correct" ? incrementScore(CORRECT_BONUS) : " ";
 
-        classToApply === "correct" ? incrementScore(CORRECT_BONUS) : " ";
+    selectedChoice.parentElement.classList.add(classToApply);
 
-        selectedChoice.parentElement.classList.add(classToApply);
-
-        setTimeout(() => {
-            selectedChoice.parentElement.classList.remove(classToApply);
-            getNewQuestion();
-        }, 1000);
-    });
+    setTimeout(() => {
+      selectedChoice.parentElement.classList.remove(classToApply);
+      getNewQuestion();
+    }, 1500);
+  });
 });
 
 incrementScore = (num) => {
-    score += num;
-    scoreText.innerText = score;
+  score += num;
+  scoreText.innerText = score;
 };
-
-startGame();
