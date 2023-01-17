@@ -54,6 +54,9 @@ getNewQuestion = () => {
         return window.location.assign("./end.html");
     }
 
+    // --------
+    localStorage.setItem('latestScore', score)
+
     // -------------------------
     questionCounter++;
 

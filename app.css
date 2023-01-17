@@ -118,6 +118,10 @@ h3 {
 }
 
 /* FORMS */
+#end {
+  align-items: center;
+}
+
 form {
   width: 100%;
   display: flex;
