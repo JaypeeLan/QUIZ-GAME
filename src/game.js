@@ -22,14 +22,10 @@ fetch(
   })
   .then((data) => {
     questions = data.results.map((question) => {
-      // console.log(question);
-
       // we get question, correct answer and 3 incorrect answers
-
       const formattedQuestions = {
         question: question.question,
       };
-
       // -----------------------------------------
       // create new array of incorrect answers
       const answerChoices = [...question.incorrect_answers];
@@ -59,7 +55,7 @@ fetch(
 const CORRECT_BONUS = 10;
 const MAX_QUESTIONS = 10;
 
-startGame = () => {
+const startGame = () => {
   questionCounter = 0;
   score = 0;
   // to avoid mutating the questions array
@@ -71,7 +67,7 @@ startGame = () => {
   loader.classList.add("hidden");
 };
 
-getNewQuestion = () => {
+const getNewQuestion = () => {
   // redirect to end page
   if (availableQuestions.length == 0 || questionCounter > MAX_QUESTIONS) {
     return window.location.assign("./end.html");
@@ -99,6 +95,7 @@ getNewQuestion = () => {
 
   choices.forEach((choice) => {
     const number = choice.dataset["number"];
+
     choice.innerHTML = currentQuestion["choice" + number];
   });
 
@@ -112,8 +109,8 @@ choices.forEach((choice) => {
   choice.addEventListener("click", (e) => {
     if (!acceptingAnswers) return;
     acceptingAnswers = false;
-
-    const selectedChoice = e.target;
+    const { target } = e;
+    const selectedChoice = target;
     const selectedAnswer = selectedChoice.dataset["number"];
 
     // apply a green background to the option if the answer is correct
@@ -123,6 +120,7 @@ choices.forEach((choice) => {
     classToApply === "correct" ? incrementScore(CORRECT_BONUS) : " ";
 
     selectedChoice.parentElement.classList.add(classToApply);
+    console.log(selectedChoice);
 
     setTimeout(() => {
       selectedChoice.parentElement.classList.remove(classToApply);
